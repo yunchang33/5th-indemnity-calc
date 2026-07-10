@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5세대 실손의료비 보험금 정밀 계산기</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1a2e4a;--navy2:#233a5c;--navy3:#0f1e30;
+  --gold:#c9a84c;--gold2:#e8c96d;--gold3:#f5e9c8;
+  --bg:#f0f2f5;--white:#fff;
+  --gray1:#f8f9fa;--gray2:#e9ecef;--gray3:#ced4da;--gray6:#6c757d;
+  --red:#e74c3c;--green:#27ae60;
+}
+body{font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;background:var(--bg);color:var(--navy);min-height:100vh;font-size:14px}
+
+/* ─── HEADER ─── */
+.hd{
+  background:linear-gradient(135deg,var(--navy3) 0%,var(--navy) 55%,var(--navy2) 100%);
+  border-bottom:3px solid var(--gold);
+  padding:18px 16px 14px;text-align:center;color:#fff;
+  position: relative;
+}
+.hd h1{font-size:1.3rem;font-weight:800;letter-spacing:-.5px}
+.hd h1 em{color:var(--gold);font-style:normal}
+.hd p{font-size:.85rem;color:var(--gold2);margin-top:5px;font-weight:700;letter-spacing:0.3px}
+
+/* 초기화 버튼 */
+.reset-top-btn {
+  position: absolute; right: 20px; top: 22px;
+  background: rgba(255,255,255,0.15); border: 1px solid var(--gold);
+  color: #fff; padding: 8px 14px; border-radius: 6px; font-size: 0.8rem;
+  font-weight: 700; cursor: pointer; transition: all 0.2s;
+}
+.reset-top-btn:hover { background: var(--gold); color: var(--navy3); }
+@media(max-width:650px){
+  .reset-top-btn { position: relative; right: auto; top: auto; display: inline-block; margin-top: 10px; }
+}
+
+/* ─── TABS ─── */
+.tabs{display:flex;background:var(--navy3);max-width:860px;margin:0 auto}
+.tbtn{flex:1;padding:13px;background:none;border:none;color:rgba(255,255,255,.5);
+  font-size:.95rem;font-weight:700;cursor:pointer;border-bottom:3px solid transparent;
+  transition:all .2s;font-family:inherit}
+.tbtn.on{color:var(--gold);border-bottom-color:var(--gold);background:rgba(201,168,76,.1)}
+
+/* ─── CONTENT ─── */
+.wrap{max-width:860px;margin:0 auto;padding:14px}
+.panel{display:none}.panel.on{display:block}
+
+/* ─── GRID ─── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.g2{grid-template-columns:1fr}}
+
+/* 나란히 배치를 위한 플렉스 그룹 */
+.row-flex { display: flex; gap: 12px; }
+.row-flex .fg { flex: 1; margin-bottom: 0; }
+
+/* ─── CARD ─── */
+.card{background:var(--white);border-radius:10px;overflow:hidden;
+  box-shadow:0 2px 8px rgba(0,0,0,.07);margin-bottom:12px}
+.ch{background:var(--navy);color:#fff;padding:9px 14px;
+  font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:6px}
+.ch .ic{color:var(--gold)}
+.cb{padding:14px}
+
+/* ─── FORM ─── */
+.fg{margin-bottom:11px}
+label{display:block;font-size:.75rem;font-weight:600;color:var(--navy);margin-bottom:4px}
+label .sub{font-weight:400;color:var(--gray6);font-size:.7rem}
+.ig{display:flex;align-items:center;gap:6px}
+.ig input{flex:1}
+.ig span{font-size:.8rem;color:var(--gray6);white-space:nowrap}
+input[type=number],input[type=date]{
+  width:100%;padding:8px 11px;border:1.5px solid var(--gray3);border-radius:6px;
+  font-size:.88rem;font-family:inherit;background:var(--white);color:var(--navy);
+  transition:border-color .15s}
+input[type=number]:focus,input[type=date]:focus{outline:none;border-color:var(--gold)}
+
+/* toggle */
+.tg{display:flex;gap:6px}
+.tg-btn{flex:1;padding:8px 6px;border:2px solid var(--gray3);border-radius:6px;
+  background:var(--white);cursor:pointer;font-size:.8rem;font-weight:700;
+  color:var(--gray6);transition:all .15s;font-family:inherit;text-align:center}
+.tg-btn.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.tg-btn.on-red{background:#c0392b;border-color:#c0392b;color:#fff}
+
+/* sub items */
+.sub-box{background:var(--gray1);border-radius:8px;padding:10px;border:1px solid var(--gray2)}
+.si { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 10px; }
+.si:last-child{margin-bottom:0}
+.si label{margin-bottom:0;font-size:.75rem; width: 180px; flex-shrink: 0;}
+.si-badge{display:inline-block;font-size:.65rem;padding:1px 5px;border-radius:3px;
+  font-weight:700;margin-left:4px}
+.badge-ok{background:var(--green);color:#fff}
+.badge-no{background:var(--red);color:#fff}
+
+/* date row */
+.drow{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end}
+.days-box{background:var(--navy);color:var(--gold);border-radius:6px;
+  padding:8px 12px;font-weight:800;font-size:.9rem;white-space:nowrap;text-align:center}
+@media(max-width:480px){.drow { grid-template-columns:1fr 1fr; gap:6px } .drow .days-box { grid-column:1/-1; text-align:center }}
+
+/* tip */
+.tip{font-size:.7rem;color:var(--gray6);margin-top:5px;line-height:1.5}
+.tip strong{color:var(--gold)}
+
+/* notice */
+.notice{background:#fff8e1;border-left:3px solid var(--gold);border-radius:0 6px 6px 0;
+  padding:9px 13px;font-size:.75rem;color:#5a4a00;margin-bottom:12px;line-height:1.6}
+
+/* ─── RESULT ─── */
+.res-card{background:var(--navy3);border-radius:10px;overflow:hidden;margin-top:4px;
+  border:1.5px solid rgba(201,168,76,.3)}
+.res-hd{background:var(--gold);color:var(--navy3);padding:10px 16px;font-weight:800;font-size:.9rem; display:flex; justify-content:space-between; align-items:center;}
+.res-tbl{width:100%;border-collapse:collapse}
+.res-tbl td{padding:9px 14px;font-size:.82rem;color:rgba(255,255,255,.88);
+  border-bottom:1px solid rgba(255,255,255,.07)}
+.res-tbl tr:last-child td{border-bottom:none}
+.res-tbl .lbl{font-weight:700;width:160px}
+.res-tbl .fml{font-size:.72rem;color:rgba(255,255,255,.42)}
+.res-tbl .amt{text-align:right;font-weight:700;color:var(--gold2);white-space:nowrap}
+.res-tbl .sect td{
+  background:rgba(255,255,255,.05);font-size:.7rem;
+  font-weight:700;color:rgba(255,255,255,.35);
+  padding:6px 14px 4px;letter-spacing:.5px}
+.res-tbl .total td{
+  background:rgba(201,168,76,.15);padding:14px 14px;
+  font-size:1rem;font-weight:800;color:var(--gold) !important}
+.res-tbl .deduct .amt{color:#ff9999}
+.res-tbl .zero .lbl,.res-tbl .zero .fml,.res-tbl .zero .amt{color:rgba(255,255,255,.25) !important}
+.empty-msg{text-align:center;color:rgba(255,255,255,.3);padding:22px;font-size:.82rem}
+
+/* 복사 버튼 스타일 */
+.copy-btn {
+  background: var(--navy); color: var(--gold); border: 1px solid var(--gold);
+  padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;
+  cursor: pointer; transition: all 0.15s;
+}
+.copy-btn:hover { background: var(--gold); color: var(--navy3); }
+</style>
+</head>
+<body>
+
+<div id="secure-app-layout-block" style="display:none;">
+  <div class="hd">
+    <h1>5세대 실손의료비 <em>보험금 계산기</em></h1>
+    <p id="system-author-mark">AIA프리미어파트너스 유윤창</p>
+    <button class="reset-top-btn" onclick="resetAllInputs()">🔄 입력값 초기화</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tbtn on" id="tab-btn-out" onclick="switchTab('out')">🏥 통원</button>
+    <button class="tbtn" id="tab-btn-inp" onclick="switchTab('inp')">🛏️ 입원</button>
+  </div>
+
+  <div class="wrap">
+    <div class="panel on" id="tab-out">
+      <div class="notice">
+        ⚠ <strong>약관 기준 정밀 정산 모듈</strong>입니다. 실제 청구 심사 결과와 미세한 오차가 발생할 수 있습니다.
+      </div>
+
+      <div class="card">
+        <div class="ch"><span class="ic">📋</span> 기본 설정 (통원)</div>
+        <div class="cb">
+          <div class="fg">
+            <label>중증/비중증 구분</label>
+            <div class="tg">
+              <button class="tg-btn on" id="o-non" onclick="setOSev('non')">비중증</button>
+              <button class="tg-btn" id="o-sev" onclick="setOSev('sev')">중증 (산정특례 대상)</button>
+            </div>
+            <div class="tip" id="o-sev-tip">
+              <strong>비중증:</strong> 일반 비급여 50% 공제 · MRI 50% 공제 보장 / 비급여 주사 및 근골격계 치료 <strong>보장 제외</strong>
+            </div>
+          </div>
+          <div class="fg">
+            <label>병원 등급 (급여 최하한 공제액 기준)</label>
+            <div class="tg" id="o-grade-group">
+              <button class="tg-btn on" onclick="setOGrade('hospital',10000,this)">병원급 이하 (1만)</button>
+              <button class="tg-btn" onclick="setOGrade('general',20000,this)">종합병원급 이상 (2만)</button>
+            </div>
+          </div>
+          <div class="fg">
+            <label>통원 보상한도 세트 선택 (급여·비급여 동시 매칭)</label>
+            <div class="tg" id="o-limit-set-group">
+              <button class="tg-btn" onclick="setOLimitSet(100000, this)">10만원 한도형</button>
+              <button class="tg-btn" onclick="setOLimitSet(150000, this)">15만원 한도형</button>
+              <button class="tg-btn on" onclick="setOLimitSet(200000, this)">20만원 한도형</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><span class="ic">💊</span> 급여 의료비</div>
+        <div class="cb">
+          <div class="row-flex">
+            <div class="fg">
+              <label>급여 일부 본인부담금 <span class="sub">(영수증상 금액)</span></label>
+              <div class="ig"><input type="number" id="o-cop" placeholder="0" min="0" oninput="calcOut()"><span>원</span></div>
+            </div>
+            <div class="fg">
+              <label>급여 공단부담금</label>
+              <div class="ig"><input type="number" id="o-gongdan" placeholder="0" min="0" oninput="calcOut()"><span>원</span></div>
+            </div>
+          </div>
+          <div class="tip">※ 본인부담률 산출 후 <strong>소수점 첫째자리에서 무조건 올림</strong> 처리됩니다.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><span class="ic">🏷️</span> 일반 비급여 (특약 3종 제외)</div>
+        <div class="cb">
+          <div class="fg">
+            <label>일반 비급여 총액</label>
+            <div class="ig"><input type="number" id="o-non-input" placeholder="0" min="0" oninput="calcOut()"><span>원</span></div>
+            <div class="tip" id="o-non-text">비중증: 1회당 5만원과 보장대상의료비의 50% 중 큰 금액 공제</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><span class="ic">⭐</span> 3종 비급여 특약 항목</div>
+        <div class="cb">
+          <div class="sub-box">
+            <div class="si">
+              <label>비급여 주사료 <span class="si-badge badge-no" id="o-inj-badge">비중증 보장제외</span></label>
+              <div class="ig"><input type="number" id="o-inj" placeholder="0" min="0" oninput="calcOut()"><span>원</span></div>
+            </div>
+            <div class="si">
+              <label>근골격계·체외충격파 <span class="si-badge badge-no" id="o-msk-badge">비중증 보장제외</span></label>
+              <div class="ig"><input type="number" id="o-msk" placeholder="0" min="0" oninput="calcOut()"><span>원</span></div>
+            </div>
+            <div class="si">
+              <label>비급여 MRI / MRA <span class="si-badge badge-ok" id="o-mri-badge">비중증 50% 보장</span></label>
+              <div class="ig"><input type="number" id="o-mri" placeholder="0" min="0" oninput="calcOut()"><span>원</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="res-card">
+        <div class="res-hd">
+          <span>📊 정산 내역 및 예상 보험금 수령액 (통원)</span>
+          <button class="copy-btn" onclick="copyResultText('o-result', '통원')">📋 결과 복사</button>
+        </div>
+        <table class="res-tbl"><tbody id="o-result">
+          <tr><td colspan="3" class="empty-msg">의료비 금액을 입력하시면 약관 기반으로 자동 계산됩니다.</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="panel" id="tab-inp">
+      <div class="notice">
+        ⚠ <strong>약관 기준 정밀 정산 모듈</strong>입니다. 실제 청구 심사 결과와 미세한 오차가 발생할 수 있습니다.
+      </div>
+
+      <div class="card">
+        <div class="ch"><span class="ic">📋</span> 기본 설정 (입원)</div>
+        <div class="cb">
+          <div class="fg">
+            <label>중증/비중증 구분</label>
+            <div class="tg">
+              <button class="tg-btn on" id="i-non" onclick="setISev('non')">비중증</button>
+              <button class="tg-btn" id="i-sev" onclick="setISev('sev')">중증 (산정특례 대상)</button>
+            </div>
+            <div class="tip" id="i-sev-tip">
+              <strong>비중증:</strong> 일반 비급여 50% 보장 (병원급 이하 의료기관 회당 가입 보상한도 제약) · 비급여 주사/근골격계 <strong>보장제외</strong>
+            </div>
+          </div>
+          <div class="fg">
+            <label>병원 등급</label>
+            <div class="tg">
+              <button class="tg-btn on" id="i-grade-hospital" onclick="setIGrade('hospital')">병원급 이하</button>
+              <button class="tg-btn" id="i-grade-general" onclick="setIGrade('general')">종합병원급 이상</button>
+            </div>
+            <div class="tip">※ 비중증 입원 시 <strong>병원급 이하</strong>는 약관에 의거 비급여 보상액 합산액에 한도가 제한됩니다.</div>
+          </div>
+          <div class="fg">
+            <label>비급여 입원 보상한도 세트 선택</label>
+            <div class="tg" id="i-limit-set-group">
+              <button class="tg-btn on" onclick="setILimitPackage(50000000, 10000000, this)">중증 5천만 / 비중증 1천만</button>
+              <button class="tg-btn" onclick="setILimitPackage(30000000, 6000000, this)">중증 3천만 / 비중증 6백만</button>
+              <button class="tg-btn" onclick="setILimitPackage(10000000, 2000000, this)">중증 1천만 / 비중증 2백만</button>
+            </div>
+          </div>
+          <div class="fg">
+            <label>입원 기간 설정</label>
+            <div class="drow">
+              <div>
+                <div style="font-size:.72rem;color:var(--gray6);margin-bottom:3px">입원일자</div>
+                <input type="date" id="i-admit" oninput="calcDays()">
+              </div>
+              <div>
+                <div style="font-size:.72rem;color:var(--gray6);margin-bottom:3px">퇴원일자</div>
+                <input type="date" id="i-discharge" oninput="calcDays()">
+              </div>
+              <div class="days-box" id="i-days-box">-- 일</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><span class="ic">💊</span> 급여 의료비 (입원)</div>
+        <div class="cb">
+          <div class="row-flex">
+            <div class="fg">
+              <label>급여 일부 본인부담금</label>
+              <div class="ig"><input type="number" id="i-cop" placeholder="0" min="0" oninput="calcInp()"><span>원</span></div>
+            </div>
+            <div class="fg">
+              <label>급여 전액 본인부담금</label>
+              <div class="ig"><input type="number" id="i-fcop" placeholder="0" min="0" oninput="calcInp()"><span>원</span></div>
+            </div>
+          </div>
+          <div class="tip">※ 보상 비율: <strong>(일부본인부담 + 전액본인부담) 총액의 80% 보상</strong></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><span class="ic">🏷️</span> 일반 비급여 (상급병실료 및 특약 제외)</div>
+        <div class="cb">
+          <div class="fg">
+            <label>일반 비급여 금액</label>
+            <div class="ig"><input type="number" id="i-non-input" placeholder="0" min="0" oninput="calcInp()"><span>원</span></div>
+            <div class="tip" id="i-non-text-inp">비중증 입원: 실제 부담한 비급여 의료비의 50% 보상 (병원급 이하 설정한도 제약)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><span class="ic">🏨</span> 상급병실료 차액</div>
+        <div class="cb">
+          <div class="fg">
+            <label>상급병실료 차액 총액</label>
+            <div class="ig"><input type="number" id="i-room" placeholder="0" min="0" oninput="calcInp()"><span>원</span></div>
+            <div class="tip">보상식: <strong>비급여 병실료 총액의 50% 지원 (1일 평균 금액 10만원 한도 적용)</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><span class="ic">⭐</span> 3종 비급여 특약 항목</div>
+        <div class="cb">
+          <div class="sub-box">
+            <div class="si">
+              <label>비급여 주사료 <span class="si-badge badge-no" id="i-inj-badge">비중증 보장제외</span></label>
+              <div class="ig"><input type="number" id="i-inj" placeholder="0" min="0" oninput="calcInp()"><span>원</span></div>
+            </div>
+            <div class="si">
+              <label>체외충격파·근골격계 <span class="si-badge badge-no" id="i-msk-badge">비중증 보장제외</span></label>
+              <div class="ig"><input type="number" id="i-msk" placeholder="0" min="0" oninput="calcInp()"><span>원</span></div>
+            </div>
+            <div class="si">
+              <label>비급여 MRI / MRA <span class="si-badge badge-ok" id="i-mri-badge">비중증 50% 보장</span></label>
+              <div class="ig"><input type="number" id="i-mri" placeholder="0" min="0" oninput="calcInp()"><span>원</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="res-card">
+        <div class="res-hd">
+          <span>📊 정산 내역 및 예상 보험금 수령액 (입원)</span>
+          <button class="copy-btn" onclick="copyResultText('i-result', '입원')">📋 결과 복사</button>
+        </div>
+        <table class="res-tbl"><tbody id="i-result">
+          <tr><td colspan="3" class="empty-msg">의료비 금액 및 입원 일수를 설정하시면 자동 계산됩니다.</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const _0x455d2d=_0x2af5;(function(_0x57a006,_0x1f3c39){const _0x21d53a=_0x2af5,_0x1e5510=_0x57a006();while(!![]){try{const _0x5112ed=-parseInt(_0x21d53a(0x202))/0x1*(-parseInt(_0x21d53a(0x201))/0x2)+parseInt(_0x21d53a(0x165))/0x3+-parseInt(_0x21d53a(0x168))/0x4+-parseInt(_0x21d53a(0x207))/0x5+parseInt(_0x21d53a(0x182))/0x6*(parseInt(_0x21d53a(0x1dc))/0x7)+parseInt(_0x21d53a(0x1a5))/0x8*(-parseInt(_0x21d53a(0x17d))/0x9)+parseInt(_0x21d53a(0x20b))/0xa;if(_0x5112ed===_0x1f3c39)break;else _0x1e5510['push'](_0x1e5510['shift']());}catch(_0x2dbb91){_0x1e5510['push'](_0x1e5510['shift']());}}}(_0x58ae,0xa133e),(function(){const _0x4f0668=_0x2af5,_0x4d51ed=window[_0x4f0668(0x167)][_0x4f0668(0x20d)];if(_0x4d51ed&&_0x4d51ed!=='yunchang33.github.io'&&_0x4d51ed!==_0x4f0668(0x1e8)&&_0x4d51ed!==_0x4f0668(0x1db)){alert(_0x4f0668(0x198)),document['body'][_0x4f0668(0x1a0)]=_0x4f0668(0x1a8);throw new Error(_0x4f0668(0x17c));}const _0x37de09='yu33';let _0x33e928=prompt(_0x4f0668(0x1dd));if(_0x33e928!==_0x37de09){alert(_0x4f0668(0x1f2)),document[_0x4f0668(0x17e)]['innerHTML']=_0x4f0668(0x190);throw new Error(_0x4f0668(0x211));}window[_0x4f0668(0x17f)](_0x4f0668(0x1f3),()=>{const _0x5b9906=_0x4f0668,_0x10424d=document[_0x5b9906(0x1e5)](_0x5b9906(0x1c7));if(_0x10424d)_0x10424d[_0x5b9906(0x17b)]['display']=_0x5b9906(0x1c3);}),document[_0x4f0668(0x17f)](_0x4f0668(0x1e0),_0x25d5c0=>_0x25d5c0[_0x4f0668(0x178)]()),document['addEventListener'](_0x4f0668(0x1ce),_0x1dfc7b=>{const _0x21385e=_0x4f0668;if(_0x1dfc7b[_0x21385e(0x1df)]===0x7b||_0x1dfc7b[_0x21385e(0x1eb)]&&_0x1dfc7b['shiftKey']&&(_0x1dfc7b[_0x21385e(0x1df)]===0x49||_0x1dfc7b[_0x21385e(0x1df)]===0x4a||_0x1dfc7b[_0x21385e(0x1df)]===0x43)||_0x1dfc7b['ctrlKey']&&_0x1dfc7b['keyCode']===0x55||_0x1dfc7b[_0x21385e(0x1eb)]&&_0x1dfc7b[_0x21385e(0x1df)]===0x53)return _0x1dfc7b[_0x21385e(0x178)](),![];});}()));const S={'oSev':_0x455d2d(0x192),'oGrade':_0x455d2d(0x19e),'oGradeDeduct':0x2710,'oLimitB':0x30d40,'oLimitN':0x30d40,'iSev':'non','iGrade':_0x455d2d(0x19e),'iLimitSevMax':0x2faf080,'iLimitNonMax':0x989680,'iDays':0x0},$=_0x5397bf=>document[_0x455d2d(0x1e5)](_0x5397bf),v=_0x5b6c34=>parseFloat($(_0x5b6c34)[_0x455d2d(0x188)])||0x0,fmt=_0x335a9d=>Math[_0x455d2d(0x183)](_0x335a9d)[_0x455d2d(0x1f9)]('ko-KR')+'원';function checkIntegrity(){const _0x4bba2f=_0x455d2d,_0x4b532e=$(_0x4bba2f(0x1af));if(!_0x4b532e||_0x4b532e['textContent'][_0x4bba2f(0x1ba)]()!==_0x4bba2f(0x171))return alert(_0x4bba2f(0x213)),document[_0x4bba2f(0x17e)][_0x4bba2f(0x1a0)]=_0x4bba2f(0x19b),![];return!![];}function switchTab(_0x2671cc){const _0x2e23a0=_0x455d2d;if(!checkIntegrity())return;$('tab-btn-out')[_0x2e23a0(0x1b6)][_0x2e23a0(0x176)]('on',_0x2671cc===_0x2e23a0(0x1cb)),$(_0x2e23a0(0x1a9))[_0x2e23a0(0x1b6)][_0x2e23a0(0x176)]('on',_0x2671cc==='inp'),$(_0x2e23a0(0x1ab))[_0x2e23a0(0x1b6)]['toggle']('on',_0x2671cc===_0x2e23a0(0x1cb)),$(_0x2e23a0(0x1d6))[_0x2e23a0(0x1b6)][_0x2e23a0(0x176)]('on',_0x2671cc===_0x2e23a0(0x1cf));}function setOSev(_0x4c5cf2){const _0x111e23=_0x455d2d;if(!checkIntegrity())return;S[_0x111e23(0x18c)]=_0x4c5cf2,$(_0x111e23(0x1c0))[_0x111e23(0x1b6)]['toggle']('on',_0x4c5cf2===_0x111e23(0x192)),$(_0x111e23(0x1d1))['classList']['toggle']('on',_0x4c5cf2===_0x111e23(0x1a1)),$(_0x111e23(0x1d1))[_0x111e23(0x1b6)][_0x111e23(0x176)](_0x111e23(0x1b7),_0x4c5cf2===_0x111e23(0x1a1));const _0x50e9a6=_0x4c5cf2===_0x111e23(0x1a1);$('o-sev-tip')['innerHTML']=_0x50e9a6?'<strong>중증:</strong>\x20일반\x20비급여\x2030%\x20공제\x20보장\x20·\x20주사\x20특약(250만\x20한도)\x20·\x20근골격계(350만\x20한도)\x20·\x20MRI(300만\x20한도)\x20완벽\x20보장':_0x111e23(0x1e7),$(_0x111e23(0x1ca))[_0x111e23(0x1a6)]=_0x50e9a6?'중증\x2070%\x20보장':_0x111e23(0x19f),$(_0x111e23(0x1ca))[_0x111e23(0x1e2)]='si-badge\x20'+(_0x50e9a6?_0x111e23(0x205):_0x111e23(0x1a7)),$('o-msk-badge')['textContent']=_0x50e9a6?_0x111e23(0x1bc):_0x111e23(0x19f),$(_0x111e23(0x16e))['className']=_0x111e23(0x204)+(_0x50e9a6?_0x111e23(0x205):_0x111e23(0x1a7)),$('o-mri-badge')['textContent']=_0x50e9a6?_0x111e23(0x1bc):_0x111e23(0x169),$(_0x111e23(0x1aa))[_0x111e23(0x1a6)]=_0x50e9a6?_0x111e23(0x1bf):_0x111e23(0x1b1),calcOut();}function setOGrade(_0x456e96,_0x2c7ca1,_0x48b78a){const _0x519443=_0x455d2d;S['oGrade']=_0x456e96,S[_0x519443(0x1ea)]=_0x2c7ca1,document[_0x519443(0x20a)](_0x519443(0x206))[_0x519443(0x1d3)](_0x218f07=>_0x218f07['classList']['remove']('on')),_0x48b78a['classList']['add']('on'),calcOut();}function setOLimitSet(_0x1f694a,_0x101015){const _0x2e54a4=_0x455d2d;S[_0x2e54a4(0x193)]=_0x1f694a,S[_0x2e54a4(0x1ac)]=_0x1f694a,document[_0x2e54a4(0x20a)]('#o-limit-set-group\x20.tg-btn')[_0x2e54a4(0x1d3)](_0xf3d356=>_0xf3d356[_0x2e54a4(0x1b6)][_0x2e54a4(0x1ff)]('on')),_0x101015[_0x2e54a4(0x1b6)][_0x2e54a4(0x1de)]('on'),calcOut();}function calcOut(){const _0x331ea4=_0x455d2d;if(!checkIntegrity())return;const _0x3ff25a=S['oSev']===_0x331ea4(0x1a1),_0x57dde4=v(_0x331ea4(0x1bb)),_0x33853d=v('o-gongdan'),_0x5de18a=v(_0x331ea4(0x1e3)),_0x22d381=v(_0x331ea4(0x200)),_0x588df6=v(_0x331ea4(0x1e9)),_0x43f1ed=v(_0x331ea4(0x1f0));if(_0x57dde4===0x0&&_0x5de18a===0x0&&_0x22d381===0x0&&_0x588df6===0x0&&_0x43f1ed===0x0){$('o-result')[_0x331ea4(0x1a0)]=_0x331ea4(0x189);return;}let _0x742517='',_0x4afc27=0x0;_0x742517+='<tr\x20class=\x22sect\x22><td\x20colspan=\x223\x22>▸\x20질병/상해\x20급여\x20의료비\x20(통원)</td></tr>';if(_0x57dde4>0x0){const _0x1fdd22=_0x57dde4+_0x33853d,_0x1106e6=_0x1fdd22>0x0?_0x57dde4/_0x1fdd22:0.2,_0x24933b=Math[_0x331ea4(0x1d9)](_0x1106e6*0x64)/0x64,_0x568402=_0x57dde4*_0x24933b,_0x35a790=Math[_0x331ea4(0x1a2)](S[_0x331ea4(0x1ea)],_0x57dde4*0.2,_0x568402),_0x5a7b48=Math[_0x331ea4(0x1a2)](0x0,_0x57dde4-_0x35a790),_0x3ef57a=Math['min'](_0x5a7b48,S['oLimitB']);_0x4afc27+=_0x3ef57a,_0x742517+=_0x331ea4(0x1cc)+(_0x24933b*0x64)[_0x331ea4(0x179)](0x0)+_0x331ea4(0x184),_0x742517+=_0x331ea4(0x1d7)+fmt(_0x35a790)+_0x331ea4(0x1b9),_0x742517+='<tr><td\x20class=\x22lbl\x22>급여\x20예상지급액</td><td\x20class=\x22fml\x22>실제\x20부담금('+fmt(_0x57dde4)+')\x20-\x20공제금\x20('+fmt(_0x35a790)+')\x20[회당\x20한도\x20'+fmt(S[_0x331ea4(0x193)])+_0x331ea4(0x1b4)+fmt(_0x3ef57a)+_0x331ea4(0x1b9);}else _0x742517+=_0x331ea4(0x208);_0x742517+=_0x331ea4(0x1ec);if(_0x5de18a>0x0){const _0x3fb0d8=_0x3ff25a?Math[_0x331ea4(0x1a2)](0x7530,_0x5de18a*0.3):Math['max'](0xc350,_0x5de18a*0.5),_0x1d929e=Math[_0x331ea4(0x1a2)](0x0,_0x5de18a-_0x3fb0d8),_0xc27ee9=Math[_0x331ea4(0x1b0)](_0x1d929e,S[_0x331ea4(0x1ac)]);_0x4afc27+=_0xc27ee9,_0x742517+=_0x331ea4(0x1f4)+(_0x3ff25a?'Max(3만원,\x20비급여의\x2030%)':_0x331ea4(0x1bd))+_0x331ea4(0x173)+fmt(_0x3fb0d8)+_0x331ea4(0x1b9),_0x742517+=_0x331ea4(0x181)+fmt(S[_0x331ea4(0x1ac)])+_0x331ea4(0x1be)+fmt(_0xc27ee9)+_0x331ea4(0x1b9);}else _0x742517+=_0x331ea4(0x1b3);_0x742517+='<tr\x20class=\x22sect\x22><td\x20colspan=\x223\x22>▸\x203종\x20비급여\x20특약\x20부문\x20(통원)</td></tr>';if(_0x22d381>0x0){if(_0x3ff25a){const _0x4dfc65=Math[_0x331ea4(0x1a2)](0x7530,_0x22d381*0.3),_0x17f839=Math[_0x331ea4(0x1b0)](Math[_0x331ea4(0x1a2)](0x0,_0x22d381-_0x4dfc65),0x2625a0);_0x4afc27+=_0x17f839,_0x742517+=_0x331ea4(0x214)+fmt(_0x17f839)+_0x331ea4(0x1b9);}else _0x742517+=_0x331ea4(0x1c1);}else _0x742517+=_0x331ea4(0x212);if(_0x588df6>0x0){if(_0x3ff25a){const _0x251eee=Math[_0x331ea4(0x1a2)](0x7530,_0x588df6*0.3),_0x5f3165=Math[_0x331ea4(0x1b0)](Math['max'](0x0,_0x588df6-_0x251eee),0x3567e0);_0x4afc27+=_0x5f3165,_0x742517+=_0x331ea4(0x210)+fmt(_0x5f3165)+_0x331ea4(0x1b9);}else _0x742517+='<tr\x20class=\x22zero\x22><td\x20class=\x22lbl\x22>근골격계·체외충격파</td><td\x20class=\x22fml\x22>비중증\x20조건에\x20따라\x20전액\x20면책\x20처리</td><td\x20class=\x22amt\x22>0원</td></tr>';}else _0x742517+=_0x331ea4(0x18d);if(_0x43f1ed>0x0){const _0x56fd86=_0x3ff25a?Math[_0x331ea4(0x1a2)](0x7530,_0x43f1ed*0.3):Math[_0x331ea4(0x1a2)](0xc350,_0x43f1ed*0.5),_0x4d1147=_0x3ff25a?0x2dc6c0:0x1e8480,_0xf76d25=Math['min'](Math[_0x331ea4(0x1a2)](0x0,_0x43f1ed-_0x56fd86),_0x4d1147);_0x4afc27+=_0xf76d25,_0x742517+=_0x331ea4(0x1f6)+(_0x3ff25a?_0x331ea4(0x19a):'비중증(50%\x20보장,\x20연\x20200만\x20한도)')+_0x331ea4(0x173)+fmt(_0xf76d25)+_0x331ea4(0x1b9);}else _0x742517+=_0x331ea4(0x1fd);_0x742517+='<tr\x20class=\x22total\x22><td\x20class=\x22lbl\x22>총\x20예상\x20보험금\x20합계</td><td\x20class=\x22fml\x22>통원\x201회\x20합산\x20정산\x20금액\x20(소수점\x20절사)</td><td\x20class=\x22amt\x22>'+Math['round'](_0x4afc27)[_0x331ea4(0x1f9)]()+_0x331ea4(0x170),$(_0x331ea4(0x191))[_0x331ea4(0x1a0)]=_0x742517;}function setISev(_0x54e33f){const _0x81d4a=_0x455d2d;if(!checkIntegrity())return;S[_0x81d4a(0x186)]=_0x54e33f,$(_0x81d4a(0x177))['classList']['toggle']('on',_0x54e33f===_0x81d4a(0x192)),$(_0x81d4a(0x1fa))[_0x81d4a(0x1b6)][_0x81d4a(0x176)]('on',_0x54e33f===_0x81d4a(0x1a1)),$(_0x81d4a(0x1fa))[_0x81d4a(0x1b6)][_0x81d4a(0x176)](_0x81d4a(0x1b7),_0x54e33f===_0x81d4a(0x1a1));const _0x2bb864=_0x54e33f===_0x81d4a(0x1a1);$(_0x81d4a(0x1ad))[_0x81d4a(0x1a0)]=_0x2bb864?_0x81d4a(0x1ae):'<strong>비중증:</strong>\x20일반\x20비급여\x2050%\x20보장\x20(병원급\x20이하\x20의료기관\x20회당\x20가입\x20보상한도\x20제약)\x20·\x20특약\x20보장제외',$(_0x81d4a(0x216))['textContent']=_0x2bb864?_0x81d4a(0x166):_0x81d4a(0x20f)+S[_0x81d4a(0x1fc)]/0x2710+_0x81d4a(0x1f8),calcInp();}function setIGrade(_0x2a5834){const _0x2cd594=_0x455d2d;S[_0x2cd594(0x1f7)]=_0x2a5834,$(_0x2cd594(0x172))[_0x2cd594(0x1b6)][_0x2cd594(0x176)]('on',_0x2a5834===_0x2cd594(0x19e)),$(_0x2cd594(0x1ef))[_0x2cd594(0x1b6)][_0x2cd594(0x176)]('on',_0x2a5834===_0x2cd594(0x18b)),calcInp();}function setILimitPackage(_0x2cfdc6,_0x158d3c,_0x224435){const _0x12a057=_0x455d2d;S['iLimitSevMax']=_0x2cfdc6,S['iLimitNonMax']=_0x158d3c,document['querySelectorAll'](_0x12a057(0x20e))[_0x12a057(0x1d3)](_0x1bef0a=>_0x1bef0a[_0x12a057(0x1b6)]['remove']('on')),_0x224435[_0x12a057(0x1b6)][_0x12a057(0x1de)]('on'),setISev(S['iSev']);}function _0x2af5(_0x9d34f8,_0x48b9b4){_0x9d34f8=_0x9d34f8-0x165;const _0x58aef8=_0x58ae();let _0x2af5b5=_0x58aef8[_0x9d34f8];return _0x2af5b5;}function calcDays(){const _0x8bdfb8=_0x455d2d,_0x131c09=$('i-admit')[_0x8bdfb8(0x188)],_0x8bfd56=$(_0x8bdfb8(0x1d4))[_0x8bdfb8(0x188)];if(_0x131c09&&_0x8bfd56){const _0x5ef0cb=Math[_0x8bdfb8(0x183)]((new Date(_0x8bfd56)-new Date(_0x131c09))/0x5265c00)+0x1;S[_0x8bdfb8(0x1c9)]=_0x5ef0cb>0x0?_0x5ef0cb:0x0,$(_0x8bdfb8(0x16a))[_0x8bdfb8(0x1a6)]=_0x5ef0cb>0x0?_0x5ef0cb+'일':'--\x20일';}calcInp();}function calcInp(){const _0x56b75f=_0x455d2d;if(!checkIntegrity())return;const _0xb1f333=S[_0x56b75f(0x186)]==='sev',_0x5e60ec=S[_0x56b75f(0x1c9)],_0xa61527=v(_0x56b75f(0x194)),_0x1aa3cb=v(_0x56b75f(0x1e1)),_0x8c2c3a=v(_0x56b75f(0x175)),_0x3a4999=v('i-room'),_0x3df2d1=v(_0x56b75f(0x197)),_0x2bf5f3=v(_0x56b75f(0x1ed)),_0x52be34=v(_0x56b75f(0x1fb));if(_0xa61527===0x0&&_0x1aa3cb===0x0&&_0x8c2c3a===0x0&&_0x3a4999===0x0&&_0x3df2d1===0x0&&_0x2bf5f3===0x0&&_0x52be34===0x0){$(_0x56b75f(0x20c))[_0x56b75f(0x1a0)]=_0x56b75f(0x196);return;}let _0x1e6352='',_0x2556fb=0x0;_0x1e6352+=_0x56b75f(0x174);const _0xeeca16=_0xa61527+_0x1aa3cb;if(_0xeeca16>0x0){const _0x3c128e=_0xeeca16*0.8,_0x30acf8=_0xeeca16-_0x3c128e,_0x20b686=Math[_0x56b75f(0x1b0)](_0x30acf8,0x1e8480),_0x5cdda4=_0xeeca16-_0x20b686;_0x2556fb+=_0x5cdda4,_0x1e6352+=_0x56b75f(0x1f5)+fmt(_0x20b686)+_0x56b75f(0x1b9),_0x1e6352+=_0x56b75f(0x17a)+fmt(_0x5cdda4)+_0x56b75f(0x1b9);}else _0x1e6352+=_0x56b75f(0x208);const _0x17e854=_0xb1f333?0.7:0.5;let _0x2219ff=_0x8c2c3a*_0x17e854,_0x4c6b71=0x0;if(_0x3df2d1>0x0&&_0xb1f333){const _0x39f7c6=Math[_0x56b75f(0x1a2)](0x7530,_0x3df2d1*0.3);_0x4c6b71=Math[_0x56b75f(0x1b0)](Math['max'](0x0,_0x3df2d1-_0x39f7c6),0x3567e0);}let _0x15efba=0x0;if(_0x2bf5f3>0x0&&_0xb1f333){const _0xbf5e2f=Math[_0x56b75f(0x1a2)](0x7530,_0x2bf5f3*0.3);_0x15efba=Math[_0x56b75f(0x1b0)](Math[_0x56b75f(0x1a2)](0x0,_0x2bf5f3-_0xbf5e2f),0x3567e0);}let _0x4167c9=0x0;if(_0x52be34>0x0){const _0x45e52d=_0xb1f333?Math[_0x56b75f(0x1a2)](0x7530,_0x52be34*0.3):Math[_0x56b75f(0x1a2)](0xc350,_0x52be34*0.5),_0x1ffa5b=_0xb1f333?0x2dc6c0:0x1e8480;_0x4167c9=Math[_0x56b75f(0x1b0)](Math[_0x56b75f(0x1a2)](0x0,_0x52be34-_0x45e52d),_0x1ffa5b);}let _0x30482c='';if(!_0xb1f333&&S[_0x56b75f(0x1f7)]===_0x56b75f(0x19e)){const _0x15fe4f=_0x2219ff+_0x4c6b71+_0x15efba+_0x4167c9;if(_0x15fe4f>0x2dc6c0){const _0x477ab4=0x2dc6c0/_0x15fe4f;_0x2219ff=_0x2219ff*_0x477ab4,_0x4c6b71=_0x4c6b71*_0x477ab4,_0x15efba=_0x15efba*_0x477ab4,_0x4167c9=_0x4167c9*_0x477ab4,_0x30482c=_0x56b75f(0x19d);}}const _0x37dc6b=_0xb1f333?S[_0x56b75f(0x1d5)]:S[_0x56b75f(0x1fc)];_0x2219ff>_0x37dc6b&&(_0x2219ff=_0x37dc6b,_0x30482c+=_0x56b75f(0x1a4)+_0x37dc6b/0x2710+_0x56b75f(0x199));_0x2556fb+=_0x2219ff+_0x4c6b71+_0x15efba+_0x4167c9,_0x1e6352+=_0x56b75f(0x1c5);_0x8c2c3a>0x0?(_0x1e6352+=_0x56b75f(0x19c)+(_0xb1f333?_0x56b75f(0x16b):_0x56b75f(0x1c4))+_0x56b75f(0x173)+fmt(_0x8c2c3a-_0x2219ff)+_0x56b75f(0x1b9),_0x1e6352+='<tr><td\x20class=\x22lbl\x22>비급여\x20예상지급액</td><td\x20class=\x22fml\x22>보상\x20비율\x20반영\x20후\x20약관\x20및\x20가입\x20한도\x20체크'+_0x30482c+_0x56b75f(0x173)+fmt(_0x2219ff)+'</td></tr>'):_0x1e6352+=_0x56b75f(0x1b3);_0x1e6352+=_0x56b75f(0x1c8);if(_0x3a4999>0x0){if(_0x5e60ec>0x0){const _0x31c279=_0x3a4999*0.5,_0x4fa787=_0x5e60ec*0x186a0,_0x560392=Math[_0x56b75f(0x1b0)](_0x31c279,_0x4fa787);_0x2556fb+=_0x560392,_0x1e6352+=_0x56b75f(0x180)+fmt(_0x31c279)+_0x56b75f(0x1f1)+_0x5e60ec+_0x56b75f(0x1d2)+fmt(_0x4fa787)+_0x56b75f(0x1b5)+fmt(_0x560392)+_0x56b75f(0x1b9);}else _0x1e6352+=_0x56b75f(0x1cd);}else _0x1e6352+=_0x56b75f(0x16d);_0x1e6352+=_0x56b75f(0x1e6),_0x3df2d1>0x0?_0xb1f333?_0x1e6352+=_0x56b75f(0x16f)+fmt(_0x4c6b71)+_0x56b75f(0x1b9):_0x1e6352+='<tr\x20class=\x22zero\x22><td\x20class=\x22lbl\x22>비급여\x20주사</td><td\x20class=\x22fml\x22>비중증\x20조건에\x20따라\x20전액\x20면책\x20처리</td><td\x20class=\x22amt\x22>0원</td></tr>':_0x1e6352+=_0x56b75f(0x212),_0x2bf5f3>0x0?_0xb1f333?_0x1e6352+=_0x56b75f(0x209)+fmt(_0x15efba)+_0x56b75f(0x1b9):_0x1e6352+=_0x56b75f(0x215):_0x1e6352+=_0x56b75f(0x18d),_0x52be34>0x0?_0x1e6352+=_0x56b75f(0x1f6)+(_0xb1f333?_0x56b75f(0x19a):_0x56b75f(0x1b8))+(!_0xb1f333&&S['iGrade']===_0x56b75f(0x19e)?'\x20[한도제한\x20연동]':'')+_0x56b75f(0x173)+fmt(_0x4167c9)+'</td></tr>':_0x1e6352+=_0x56b75f(0x1fd),_0x1e6352+=_0x56b75f(0x18f)+Math['round'](_0x2556fb)[_0x56b75f(0x1f9)]()+_0x56b75f(0x170),$(_0x56b75f(0x20c))[_0x56b75f(0x1a0)]=_0x1e6352;}function resetAllInputs(){const _0x171861=_0x455d2d,_0x3f3830=document['querySelectorAll'](_0x171861(0x18e));_0x3f3830[_0x171861(0x1d3)](_0x469480=>_0x469480[_0x171861(0x188)]=''),$(_0x171861(0x16a))[_0x171861(0x1a6)]=_0x171861(0x1d8),S[_0x171861(0x1c9)]=0x0,calcOut(),calcInp();}function copyResultText(_0x46e7bf,_0x32f69f){const _0x3d2b2b=_0x455d2d,_0x13da95=$(_0x46e7bf);if(_0x13da95['getElementsByClassName'](_0x3d2b2b(0x203))[_0x3d2b2b(0x1b2)]>0x0){alert(_0x3d2b2b(0x1ee));return;}let _0x1fefb7=_0x3d2b2b(0x1e4)+_0x32f69f+']\x0a';_0x1fefb7+='----------------------------------------\x0a';const _0x128ee5=_0x13da95[_0x3d2b2b(0x20a)]('tr');_0x128ee5['forEach'](_0x3f03c9=>{const _0x27e099=_0x3d2b2b;if(_0x3f03c9[_0x27e099(0x1b6)]['contains']('sect'))_0x1fefb7+='\x0a'+_0x3f03c9[_0x27e099(0x1a6)][_0x27e099(0x1ba)]()+'\x0a';else{const _0xcf6d79=_0x3f03c9[_0x27e099(0x20a)]('td');if(_0xcf6d79[_0x27e099(0x1b2)]===0x3){const _0x234c1d=_0xcf6d79[0x0]['textContent'][_0x27e099(0x1ba)](),_0x2d9906=_0xcf6d79[0x1]['textContent'][_0x27e099(0x1ba)](),_0x410933=_0xcf6d79[0x2][_0x27e099(0x1a6)][_0x27e099(0x1ba)]();_0x3f03c9['classList'][_0x27e099(0x187)]('total')?_0x1fefb7+=_0x27e099(0x1d0)+_0x234c1d+'\x20('+_0x2d9906+_0x27e099(0x1fe)+_0x410933+'\x0a':_0x1fefb7+='-\x20'+_0x234c1d+'\x20('+_0x2d9906+_0x27e099(0x1fe)+_0x410933+'\x0a';}}}),_0x1fefb7+=_0x3d2b2b(0x1a3);const _0x479e2d=document[_0x3d2b2b(0x1c6)](_0x3d2b2b(0x185));document[_0x3d2b2b(0x17e)]['appendChild'](_0x479e2d),_0x479e2d[_0x3d2b2b(0x188)]=_0x1fefb7,_0x479e2d[_0x3d2b2b(0x16c)](),document[_0x3d2b2b(0x195)](_0x3d2b2b(0x18a)),document['body'][_0x3d2b2b(0x1da)](_0x479e2d),alert(_0x32f69f+_0x3d2b2b(0x1c2));}window[_0x455d2d(0x17f)]('DOMContentLoaded',()=>{calcOut(),calcInp();});function _0x58ae(){const _0x3d2141=['#o-grade-group\x20.tg-btn','4607660hpKCzx','<tr\x20class=\x22zero\x22><td\x20class=\x22lbl\x22>급여\x20내역\x20없음</td><td\x20class=\x22fml\x22>-</td><td\x20class=\x22amt\x22>0원</td></tr>','<tr><td\x20class=\x22lbl\x22>근골격계/충격파\x20지급</td><td\x20class=\x22fml\x22>중증\x20특약\x20입원\x20결합\x20보장\x20(연\x20350만\x20범위\x20한도)</td><td\x20class=\x22amt\x22>','querySelectorAll','20042730iJBagE','i-result','hostname','#i-limit-set-group\x20.tg-btn','비중증\x20입원:\x20실제\x20부담한\x20비급여\x20의료비의\x2050%\x20보상\x20(병원급\x20이하\x20비급여\x20보상\x20합산\x201회당\x20','<tr><td\x20class=\x22lbl\x22>근골격계/충격파\x20지급</td><td\x20class=\x22fml\x22>중증\x20특약\x20보장\x20대상\x20(연간\x20350만원\x20한도\x20내)</td><td\x20class=\x22amt\x22>','Password\x20authentication\x20failed','<tr\x20class=\x22zero\x22><td\x20class=\x22lbl\x22>비급여\x20주사\x20내역\x20없음</td><td\x20class=\x22fml\x22>-</td><td\x20class=\x22amt\x22>0원</td></tr>','제작자\x20정보\x20무단\x20위변조가\x20감지되어\x20프로그램이\x20영구\x20긴급\x20정지됩니다.','<tr><td\x20class=\x22lbl\x22>비급여\x20주사\x20지급</td><td\x20class=\x22fml\x22>중증\x20특약\x20보장\x20대상\x20(연간\x20250만원\x20한도\x20내)</td><td\x20class=\x22amt\x22>','<tr\x20class=\x22zero\x22><td\x20class=\x22lbl\x22>근골격계·체외충격파</td><td\x20class=\x22fml\x22>비중증\x20조건에\x20따라\x20전액\x20면책\x20처리</td><td\x20class=\x22amt\x22>0원</td></tr>','i-non-text-inp','1557252ypnuEZ','중증\x20입원:\x20실제\x20부담한\x20비급여\x20의료비의\x2070%\x20보상\x20(한도\x20패키지\x20기준\x20적용)','location','4046432ZYBLrO','비중증\x2050%\x20보장','i-days-box','30%','select','<tr\x20class=\x22zero\x22><td\x20class=\x22lbl\x22>상급병실료\x20내역\x20없음</td><td\x20class=\x22fml\x22>-</td><td\x20class=\x22amt\x22>0원</td></tr>','o-msk-badge','<tr><td\x20class=\x22lbl\x22>비급여\x20주사\x20지급</td><td\x20class=\x22fml\x22>중증\x20특약\x20입원\x20결합\x20보장\x20(연\x20350만\x20범위\x20한도)</td><td\x20class=\x22amt\x22>','원</td></tr>','AIA프리미어파트너스\x20유윤창','i-grade-hospital','</td><td\x20class=\x22amt\x22>','<tr\x20class=\x22sect\x22><td\x20colspan=\x223\x22>▸\x20질병/상해\x20급여\x20의료비\x20(입원)</td></tr>','i-non-input','toggle','i-non','preventDefault','toFixed','<tr><td\x20class=\x22lbl\x22>급여\x20예상지급액</td><td\x20class=\x22fml\x22>급여\x20보상대상\x20총액의\x2080%\x20이상\x20지원\x20조건\x20충족</td><td\x20class=\x22amt\x22>','style','Domain\x20locked','27MCjvRA','body','addEventListener','<tr><td\x20class=\x22lbl\x22>병실료\x20정산\x20산식</td><td\x20class=\x22fml\x22>Min(차액의\x2050%인\x20','<tr><td\x20class=\x22lbl\x22>비급여\x20예상지급액</td><td\x20class=\x22fml\x22>차액\x20정산\x20후\x20일당\x20한도\x20','23442TiMsSD','round','%</td><td\x20class=\x22amt\x22>-</td></tr>','textarea','iSev','contains','value','<tr><td\x20colspan=\x223\x22\x20class=\x22empty-msg\x22>금액을\x20입력하시면\x20자동\x20계산됩니다.</td></tr>','copy','general','oSev','<tr\x20class=\x22zero\x22><td\x20class=\x22lbl\x22>근골격계\x20치료\x20내역\x20없음</td><td\x20class=\x22fml\x22>-</td><td\x20class=\x22amt\x22>0원</td></tr>','input','<tr\x20class=\x22total\x22><td\x20class=\x22lbl\x22>총\x20예상\x20보험금\x20합계</td><td\x20class=\x22fml\x22>입원\x20전체\x20기간\x20합산\x20정산\x20금액\x20(소수점\x20절사)</td><td\x20class=\x22amt\x22>','<div\x20style=\x22text-align:center;\x20margin-top:150px;\x20color:#c0392b;\x22><h1>🔒\x20인증\x20실패</h1><p\x20style=\x22margin-top:15px;\x20color:#666;\x22>올바른\x20마스터\x20비밀번호를\x20입력해야\x20계산기\x20모듈을\x20활성화할\x20수\x20있습니다.</p></div>','o-result','non','oLimitB','i-cop','execCommand','<tr><td\x20colspan=\x223\x22\x20class=\x22empty-msg\x22>금액과\x20입원\x20정보를\x20입력하시면\x20실시간\x20정산됩니다.</td></tr>','i-inj','허가되지\x20않은\x20불법\x20복사본\x20주소입니다.\x20정품\x20웹페이지\x20주소를\x20이용해\x20주세요.','만\x20초과\x20차감)','중증(70%\x20보장,\x20연\x20300만\x20한도)','<div\x20style=\x22text-align:center;\x20margin-top:150px;\x20color:#c0392b;\x22><h1>🚨\x20무단\x20소스\x20위변조\x20감지\x20(보안\x20제약)</h1></div>','<tr\x20class=\x22deduct\x22><td\x20class=\x22lbl\x22>비급여\x20자기부담금</td><td\x20class=\x22fml\x22>자기부담률:\x20','\x20(약관\x20제약:\x20병원급\x20이하\x20비급여\x20보상\x20합계액\x201회당\x20300만\x20한도\x20초과\x20비례\x20차감\x20완료)','hospital','비중증\x20보장제외','innerHTML','sev','max','----------------------------------------','\x20(가입\x20패키지\x20한도\x20','1586472uopuDN','textContent','badge-no','<div\x20style=\x22text-align:center;\x20margin-top:150px;\x20color:#c0392b;\x22><h1>🚨\x20불법\x20복제된\x20실손\x20계산기\x20페이지입니다.</h1><p\x20style=\x22margin-top:15px;\x20color:#666;\x22>AIA프리미어파트너스\x20유윤창\x20자산\x20보장을\x20위해\x20기능이\x20전면\x20폐쇄되었습니다.</p></div>','tab-btn-inp','o-non-text','tab-out','oLimitN','i-sev-tip','<strong>중증:</strong>\x20일반\x20비급여\x2070%\x20보장\x20(연간\x20최대\x20가입금액\x20상향)\x20·\x20주사/충격파\x20특약\x20보장\x20활성화','system-author-mark','min','비중증\x20통원:\x201회당\x205만원과\x20보장대상의료비의\x2050%\x20중\x20큰\x20금액\x20공제','length','<tr\x20class=\x22zero\x22><td\x20class=\x22lbl\x22>일반\x20비급여\x20내역\x20없음</td><td\x20class=\x22fml\x22>-</td><td\x20class=\x22amt\x22>0원</td></tr>','\x20반영]</td><td\x20class=\x22amt\x22>',')</td><td\x20class=\x22amt\x22>','classList','on-red','비중증(50%\x20보장,\x20연\x20200만\x20한도)','</td></tr>','trim','o-cop','중증\x2070%\x20보장','Max(5만원,\x20비급여의\x2050%)','\x20통제\x20반영</td><td\x20class=\x22amt\x22>','중증\x20통원:\x201회당\x203만원과\x20보장대상의료비의\x2030%\x20중\x20큰\x20금액\x20공제','o-non','<tr\x20class=\x22zero\x22><td\x20class=\x22lbl\x22>비급여\x20주사</td><td\x20class=\x22fml\x22>비중증\x20조건에\x20따라\x20전액\x20면책\x20처리</td><td\x20class=\x22amt\x22>0원</td></tr>','\x20정산\x20결과가\x20클립보드에\x20복사되었습니다.\x20대상\x20창에\x20붙여넣기(Ctrl+V)\x20하세요!','block','50%','<tr\x20class=\x22sect\x22><td\x20colspan=\x223\x22>▸\x20일반\x20비급여\x20의료비\x20(입원)</td></tr>','createElement','secure-app-layout-block','<tr\x20class=\x22sect\x22><td\x20colspan=\x223\x22>▸\x20상급병실료\x20차액\x20지원금</td></tr>','iDays','o-inj-badge','out','<tr><td\x20class=\x22lbl\x22>본인부담률\x20산출</td><td\x20class=\x22fml\x22>일부본인부담\x20비율(올림\x20완료)\x20:\x20','<tr\x20class=\x22deduct\x22><td\x20class=\x22lbl\x22>정산\x20불가</td><td\x20class=\x22fml\x22>상단\x20기본\x20설정에서\x20입원/퇴원\x20일자를\x20지정하세요.</td><td\x20class=\x22amt\x22>0원</td></tr>','keydown','inp','\x0a#\x20','o-sev','일\x20=\x20','forEach','i-discharge','iLimitSevMax','tab-inp','<tr><td\x20class=\x22lbl\x22>급여\x20공제금액</td><td\x20class=\x22fml\x22>Max(등급별\x20공제,\x2020%,\x20본인부담률\x20적용액)</td><td\x20class=\x22amt\x22>','--\x20일','ceil','removeChild','127.0.0.1','917ZGINDs','🔒\x20인증\x20비밀번호를\x20입력해주세요:','add','keyCode','contextmenu','i-fcop','className','o-non-input','[5세대\x20실손의료비\x20정산\x20내역\x20-\x20','getElementById','<tr\x20class=\x22sect\x22><td\x20colspan=\x223\x22>▸\x203종\x20비급여\x20특약\x20부문\x20(입원)</td></tr>','<strong>비중증:</strong>\x20일반\x20비급여\x2050%\x20공제\x20·\x20MRI\x2050%\x20공제\x20보장\x20/\x20비급여\x20주사\x20및\x20근골격계\x20치료\x20<strong>보장\x20제외</strong>','localhost','o-msk','oGradeDeduct','ctrlKey','<tr\x20class=\x22sect\x22><td\x20colspan=\x223\x22>▸\x20일반\x20비급여\x20의료비\x20(통원)</td></tr>','i-msk','복사할\x20정산\x20결과\x20데이터가\x20없습니다.','i-grade-general','o-mri',',\x201일\x2010만\x20×\x20','비밀번호가\x20일치하지\x20않습니다.\x20접근\x20권한이\x20없습니다.','DOMContentLoaded','<tr\x20class=\x22deduct\x22><td\x20class=\x22lbl\x22>비급여\x20공제금액</td><td\x20class=\x22fml\x22>','<tr\x20class=\x22deduct\x22><td\x20class=\x22lbl\x22>급여\x20자기부담금</td><td\x20class=\x22fml\x22>본인부담\x2020%\x20적용\x20(연간\x20최대\x20200만원\x20한도\x20제한)</td><td\x20class=\x22amt\x22>','<tr><td\x20class=\x22lbl\x22>비급여\x20MRI\x20지급</td><td\x20class=\x22fml\x22>','iGrade','백만\x20한도\x20제약)','toLocaleString','i-sev','i-mri','iLimitNonMax','<tr\x20class=\x22zero\x22><td\x20class=\x22lbl\x22>비급여\x20MRI\x20내역\x20없음</td><td\x20class=\x22fml\x22>-</td><td\x20class=\x22amt\x22>0원</td></tr>','):\x20','remove','o-inj','2BDwLtb','153179zOvOCo','empty-msg','si-badge\x20','badge-ok'];_0x58ae=function(){return _0x3d2141;};return _0x58ae();}
+</script>
+</body>
+</html>
